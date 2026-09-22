@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Smart Library Management System</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 900px; margin: 40px auto; background: #f4f6f8; color: #222; }
+  h1 { color: #1a3c6e; }
+  .card { background: #fff; border-radius: 8px; padding: 16px 20px; margin-bottom: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+  .book-title { font-weight: bold; font-size: 16px; }
+  .meta { color: #666; font-size: 13px; }
+  button { background: #1a3c6e; color: #fff; border: none; padding: 8px 14px; border-radius: 4px; cursor: pointer; margin-top: 6px; }
+  button:hover { background: #14304f; }
+  input { padding: 6px; margin: 4px 0; width: 100%; box-sizing: border-box; }
+  .rec-badge { display:inline-block; background:#e8f0fe; color:#1a3c6e; font-size:11px; padding:2px 8px; border-radius:10px; margin-left:6px; }
+  #recSection { border-left: 4px solid #1a3c6e; padding-left: 14px; }
+</style>
+</head>
+<body>
+
+<h1>📚 Smart Library Management System</h1>
+
+<div class="card">
+  <h3>Login</h3>
+  <input id="email" placeholder="Email (try ravindra@example.com)" />
+  <input id="password" type="password" placeholder="Password (try pass123)" />
+  <button onclick="login()">Login</button>
+  <p id="loginStatus"></p>
+</div>
+
+<div id="app" style="display:none;">
+  <h2>📖 Catalogue</h2>
+  <div id="catalogue"></div>
+
+  <h2 id="recSection">🤖 Recommended for You <span class="rec-badge">AI content-based</span></h2>
+  <div id="recommendations"><em>Issue a couple of books to see recommendations appear here.</em></div>
+</div>
+
+<script>
+const API = "http://localhost:8080/api";
+let currentMemberId = null;
+
+async function login() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const res = await fetch(`${API}/members/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password })
+  });
+  const data = await res.json();
+  if (data.success) {
+    currentMemberId = data.memberId;
+    document.getElementById("loginStatus").textContent = `✅ Welcome, ${data.name}!`;
+    document.getElementById("app").style.display = "block";
+    loadCatalogue();
+    loadRecommendations();
+  } else {
+    document.getElementById("loginStatus").textContent = "❌ " + data.message;
+  }
+}
+
+async function loadCatalogue() {
+  const res = await fetch(`${API}/books`);
+  const books = await res.json();
+  const container = document.getElementById("catalogue");
+  container.innerHTML = books.map(b => `
+    <div class="card">
+      <div class="book-title">${b.title}</div>
+      <div class="meta">${b.author} · ${b.category} · ${b.availableQuantity}/${b.totalQuantity} available</div>
+      <button onclick="issueBook(${b.id})">Issue this book</button>
+    </div>
+  `).join("");
+}
+
+async function issueBook(bookId) {
+  await fetch(`${API}/issue?memberId=${currentMemberId}&bookId=${bookId}`, { method: "POST" });
+  loadCatalogue();
+  loadRecommendations();
+}
+
+async function loadRecommendations() {
+  const res = await fetch(`${API}/members/${currentMemberId}/recommendations?topN=5`);
+  const recs = await res.json();
+  const container = document.getElementById("recommendations");
+  if (!recs.length) {
+    container.innerHTML = "<em>No recommendations yet — issue a book first.</em>";
+    return;
+  }
+  container.innerHTML = recs.map(r => `
+    <div class="card">
+      <div class="book-title">${r.title}</div>
+      <div class="meta">${r.author} · ${r.category} · similarity score: ${r.similarityScore.toFixed(3)}</div>
+    </div>
+  `).join("");
+}
+</script>
+
+</body>
+</html>
