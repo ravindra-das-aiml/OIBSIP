@@ -1,0 +1,16 @@
+C:\Users\RAVINDRA DAS\Downloads\OIBSIP-Java-Tasks\OIBSIP\Java-Task5-SmartLibraryManagementSystem\backend\src\main\java\com\oibsip\library\config\AppConfig.java
+C:\Users\RAVINDRA DAS\Downloads\OIBSIP-Java-Tasks\OIBSIP\Java-Task5-SmartLibraryManagementSystem\backend\src\main\java\com\oibsip\library\config\CorsConfig.java
+C:\Users\RAVINDRA DAS\Downloads\OIBSIP-Java-Tasks\OIBSIP\Java-Task5-SmartLibraryManagementSystem\backend\src\main\java\com\oibsip\library\config\DataSeeder.java
+C:\Users\RAVINDRA DAS\Downloads\OIBSIP-Java-Tasks\OIBSIP\Java-Task5-SmartLibraryManagementSystem\backend\src\main\java\com\oibsip\library\controller\BookController.java
+C:\Users\RAVINDRA DAS\Downloads\OIBSIP-Java-Tasks\OIBSIP\Java-Task5-SmartLibraryManagementSystem\backend\src\main\java\com\oibsip\library\controller\IssueController.java
+C:\Users\RAVINDRA DAS\Downloads\OIBSIP-Java-Tasks\OIBSIP\Java-Task5-SmartLibraryManagementSystem\backend\src\main\java\com\oibsip\library\controller\MemberController.java
+C:\Users\RAVINDRA DAS\Downloads\OIBSIP-Java-Tasks\OIBSIP\Java-Task5-SmartLibraryManagementSystem\backend\src\main\java\com\oibsip\library\dto\RecommendedBookDto.java
+C:\Users\RAVINDRA DAS\Downloads\OIBSIP-Java-Tasks\OIBSIP\Java-Task5-SmartLibraryManagementSystem\backend\src\main\java\com\oibsip\library\LibraryApplication.java
+C:\Users\RAVINDRA DAS\Downloads\OIBSIP-Java-Tasks\OIBSIP\Java-Task5-SmartLibraryManagementSystem\backend\src\main\java\com\oibsip\library\model\Book.java
+C:\Users\RAVINDRA DAS\Downloads\OIBSIP-Java-Tasks\OIBSIP\Java-Task5-SmartLibraryManagementSystem\backend\src\main\java\com\oibsip\library\model\IssueRecord.java
+C:\Users\RAVINDRA DAS\Downloads\OIBSIP-Java-Tasks\OIBSIP\Java-Task5-SmartLibraryManagementSystem\backend\src\main\java\com\oibsip\library\model\Member.java
+C:\Users\RAVINDRA DAS\Downloads\OIBSIP-Java-Tasks\OIBSIP\Java-Task5-SmartLibraryManagementSystem\backend\src\main\java\com\oibsip\library\repository\BookRepository.java
+C:\Users\RAVINDRA DAS\Downloads\OIBSIP-Java-Tasks\OIBSIP\Java-Task5-SmartLibraryManagementSystem\backend\src\main\java\com\oibsip\library\repository\IssueRecordRepository.java
+C:\Users\RAVINDRA DAS\Downloads\OIBSIP-Java-Tasks\OIBSIP\Java-Task5-SmartLibraryManagementSystem\backend\src\main\java\com\oibsip\library\repository\MemberRepository.java
+C:\Users\RAVINDRA DAS\Downloads\OIBSIP-Java-Tasks\OIBSIP\Java-Task5-SmartLibraryManagementSystem\backend\src\main\java\com\oibsip\library\service\LibraryService.java
+C:\Users\RAVINDRA DAS\Downloads\OIBSIP-Java-Tasks\OIBSIP\Java-Task5-SmartLibraryManagementSystem\backend\src\main\java\com\oibsip\library\service\RecommendationClient.java

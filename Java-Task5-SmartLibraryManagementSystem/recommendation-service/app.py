@@ -1,38 +1,60 @@
-"""
+﻿"""
 Recommendation microservice for the Smart Library Management System.
-
-Content-based filtering approach:
-  1. Represent every book as a text "profile" combining its author + category
-  2. Vectorize all book profiles using TF-IDF
-  3. For a given user, average the TF-IDF vectors of the books they've already
-     read (their "taste profile")
-  4. Rank all *other* books in the catalog by cosine similarity to that taste
-     profile, and return the top N
-
-This is intentionally simple and explainable (no black-box deep learning) —
-appropriate for a catalog of this size, and easy to explain in an interview:
-"a book similar to what you already liked, based on shared author/category."
-
-Run:
-    pip install -r requirements.txt
-    python app.py
-Service listens on http://localhost:5000
+Pure Python implementation (no numpy/scikit-learn) - TF-IDF + cosine similarity.
 """
 
+import math
+from collections import Counter
 from flask import Flask, request, jsonify
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-import numpy as np
 
 app = Flask(__name__)
 
 
-def build_profile_text(book: dict) -> str:
-    """Combines author + category into one text field for TF-IDF.
-    Author is repeated to weight it slightly higher than category alone."""
-    author = str(book.get("author", "")).replace(" ", "_")
-    category = str(book.get("category", ""))
-    return f"{author} {author} {category}"
+def tokenize(book):
+    author = str(book.get("author", "")).lower().replace(",", "").split()
+    category = str(book.get("category", "")).lower().split()
+    return author + author + category
+
+
+def compute_tfidf_vectors(catalog):
+    doc_tokens = {book["id"]: tokenize(book) for book in catalog}
+    n_docs = len(catalog)
+
+    df = Counter()
+    for tokens in doc_tokens.values():
+        for term in set(tokens):
+            df[term] += 1
+
+    idf = {term: math.log((n_docs + 1) / (freq + 1)) + 1 for term, freq in df.items()}
+
+    vectors = {}
+    for book_id, tokens in doc_tokens.items():
+        tf = Counter(tokens)
+        total = len(tokens) if tokens else 1
+        vectors[book_id] = {term: (count / total) * idf[term] for term, count in tf.items()}
+
+    return vectors
+
+
+def cosine_similarity(vec_a, vec_b):
+    common_terms = set(vec_a.keys()) & set(vec_b.keys())
+    dot_product = sum(vec_a[t] * vec_b[t] for t in common_terms)
+
+    norm_a = math.sqrt(sum(v * v for v in vec_a.values()))
+    norm_b = math.sqrt(sum(v * v for v in vec_b.values()))
+
+    if norm_a == 0 or norm_b == 0:
+        return 0.0
+    return dot_product / (norm_a * norm_b)
+
+
+def average_vector(vectors):
+    combined = Counter()
+    for vec in vectors:
+        for term, weight in vec.items():
+            combined[term] += weight
+    n = len(vectors) if vectors else 1
+    return {term: total / n for term, total in combined.items()}
 
 
 @app.route("/health", methods=["GET"])
@@ -50,41 +72,27 @@ def recommend():
 
     if not catalog:
         return jsonify({"recommendations": [], "reason": "empty catalog"}), 200
-
     if not history_ids:
         return jsonify({"recommendations": [], "reason": "no reading history yet"}), 200
 
-    # Build TF-IDF matrix over the whole catalog
-    profiles = [build_profile_text(b) for b in catalog]
-    vectorizer = TfidfVectorizer()
-    tfidf_matrix = vectorizer.fit_transform(profiles)
+    vectors = compute_tfidf_vectors(catalog)
 
-    # Index lookup
-    id_to_index = {book["id"]: i for i, book in enumerate(catalog)}
-
-    history_indices = [id_to_index[bid] for bid in history_ids if bid in id_to_index]
-    if not history_indices:
+    history_vectors = [vectors[bid] for bid in history_ids if bid in vectors]
+    if not history_vectors:
         return jsonify({"recommendations": [], "reason": "history books not found in catalog"}), 200
 
-    # User's "taste profile" = average vector of books they've read
-    history_vectors = tfidf_matrix[history_indices]
-    user_profile = np.asarray(history_vectors.mean(axis=0))
+    user_profile = average_vector(history_vectors)
 
-    # Similarity of every book in the catalog to the user's taste profile
-    similarities = cosine_similarity(user_profile, tfidf_matrix)[0]
+    scored = []
+    for book in catalog:
+        if book["id"] in history_ids:
+            continue
+        score = cosine_similarity(user_profile, vectors[book["id"]])
+        if score > 0:
+            scored.append((book, score))
 
-    # Rank books, excluding ones already read
-    ranked = sorted(
-        (
-            (book, float(similarities[i]))
-            for i, book in enumerate(catalog)
-            if book["id"] not in history_ids
-        ),
-        key=lambda pair: pair[1],
-        reverse=True,
-    )
-
-    top_results = ranked[:top_n]
+    scored.sort(key=lambda pair: pair[1], reverse=True)
+    top_results = scored[:top_n]
 
     recommendations = [
         {
@@ -95,7 +103,6 @@ def recommend():
             "score": round(score, 4),
         }
         for book, score in top_results
-        if score > 0  # don't recommend completely unrelated books
     ]
 
     return jsonify({"recommendations": recommendations})
